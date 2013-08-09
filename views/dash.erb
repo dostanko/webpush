@@ -1,0 +1,41 @@
+<head>
+<script>
+    WEB_SOCKET_SERVER_HOST =  "localhost";//"iwebpush.herokuapp.com";//"localhost"
+    if ("WebSocket" in window) {
+ 
+        console.log('WebSocket is supported by your browser.');
+ 
+        var serviceUrl = 'ws://' + WEB_SOCKET_SERVER_HOST + ':9876/';
+        var protocol;
+        var socket = new WebSocket(serviceUrl, protocol);
+ 
+        socket.onopen = function () {
+            console.log('Connection Established!');
+            socket.send("Hello WebSocket!");
+        };
+ 
+        socket.onclose = function () {
+            console.log('Connection Closed!');
+        };
+ 
+        socket.onerror = function (error) {
+            console.log('Error Occured: ' + error);
+        };
+ 
+        socket.onmessage = function (e) {
+            if (typeof e.data === "string") {
+                console.log('String message received: ' + e.data);
+            }
+            else if (e.data instanceof ArrayBuffer) {
+                console.log('ArrayBuffer received: ' + e.data);
+            }
+            else if (e.data instanceof Blob) {
+                console.log('Blob received: ' + e.data);
+            }
+        };
+    }
+</script>
+</head>
+<body>
+It's dashboard!
+</body>
