@@ -1,31 +1,46 @@
 require 'sinatra'
 require 'em-websocket'
 
-@websocket_alive = false
+@@websocket_server
 
 get '/' do
-  Thread.new { start_websoket} if !@websocket_alive
   erb :dash
 end
 
-def start_websoket
-  EM.run {
-    EM::WebSocket.run(:host => "0.0.0.0", :port => 9876) do |ws|
-      ws.onopen { |handshake|
-        puts "WebSocket connection open"
+get '/update_frame' do
+  erb :update_frame
+end
 
-        # Access properties on the EM::WebSocket::Handshake object, e.g.
-        # path, query_string, origin, headers
+post '/update_frame' do
+    @@websocket_server.send "data = {frame_id:0, size:#{params[:size]}," + 
+			"x:#{params[:x]} ," +
+			" y:#{params[:y]}," +
+			" color:'" + params[:color]+ "'," +
+			" text:'" + params[:text]+ "'}"
+   erb :update_frame
+end
 
-        ws.send "Hello Client, you connected !!! to #{handshake.path}"
-      }
+configure do
+  Thread.new {
+    EM.run {
+      EM::WebSocket.run(:host => "0.0.0.0", :port => 9876) do |ws|
+        @@websocket_server = ws
+        @@websocket_server.onopen { |handshake|
+          puts "WebSocket connection open"
 
-      ws.onclose { puts "Connection closed" }
+          # Access properties on the EM::WebSocket::Handshake object, e.g.
+          # path, query_string, origin, headers
 
-      ws.onmessage { |msg|
-        puts "Recieved message: #{msg}"
-        ws.send "Pong: #{msg}"
-      }
-    end
+          @@websocket_server.send "data = 'Hello Client, you connected !!! to #{handshake.path}'"
+        }
+
+        @@websocket_server.onclose { puts "Connection closed" }
+
+        @@websocket_server.onmessage { |msg|
+          puts "Recieved message: #{msg}"
+          ws.send "data = 'Pong: #{msg}'"
+        }
+      end
+    }
   }
 end
